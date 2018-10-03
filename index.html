@@ -2,7 +2,7 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
-		<title>Contribute</title>
+		<title>simple</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<!--[if lte IE 8]><script src="assets/js/ie/html5shiv.js"></script><![endif]-->
@@ -19,12 +19,15 @@
       </section>
 
       <section class="container">
+				<input type="search" autocomplete="off" id="search"></input>
         <select id="categories"></select>
-        <br>
-        <p id="name"/>
-        <p id="description"/>
-        <p id="username"/>
-        <p id="pw"/>
+				<div  id="main">
+	        <br>
+	        <i id="name"></i><br>
+	        <i id="description"></i><br>
+	        <i id="username"></i><br>
+	        <i id="pw"></i><br>
+				</div>
       </section>
 
 
@@ -32,15 +35,15 @@
         <button class="button style2 small" id="newlink">New Link</button>
         <form id="newform">
           <label for="name">Name</label>
-          <input name="name" id="name" type="text"></input><br>
+          <input name="name" id="nameform" type="text"></input><br>
           <label for="description">Description</label>
-          <input name="description" id="description" type="text"></input><br>
+          <input name="description" id="descriptionform" type="text"></input><br>
           <label for="username">Username</label>
-          <input name="username" id="username" type="text"></input><br>
+          <input name="username" id="usernameform" type="text"></input><br>
           <label for="newpw">New Pasword</label>
-          <input name="newpw" id="newpw" type="password"></input><br>
+          <input name="newpw" id="newpwform" type="password"></input><br>
           <label for="repeatpw">Repeat Password</label>
-          <input name="repeatpw" id="repeatpw" type="password"></input>
+          <input name="repeatpw" id="repeatpwform" type="password"></input>
         </form>
         <button class="button style2 small" id="save">Save</button>
 
@@ -50,10 +53,67 @@
 
     <script>
       var token;
+
+			function selectselect() {
+				var selected = $('#categories option:selected').text()
+				var data = {
+					token: token,
+					cat: $('#categories option:selected').text()
+				}
+				fetch("http://localhost:8080/get2", {
+					method: "POST",
+					body: selected + ";" + token//"token=" + token + "&cat=" + $('#categories option:selected').text()
+				})
+				.then(response => response.json())
+				.then(json => {
+					addPassword(json);
+				})
+			}
+
+			function loadCategories(){
+				$.ajax({
+					url: "http://localhost:8080/categories",
+					method: "POST",
+					data: {
+						token: token
+					}
+				}).done((msg) => {
+					var drop = $('#categories');
+					drop.empty();
+					drop.slideDown();
+					drop.append('<option selected="true" disabled>Choose Password</option>');
+					$.each(msg, (key, cat) => {
+						drop.append($('<option></option>').attr('value', cat).text(cat));
+					})
+					drop.change(selectselect);
+				})
+			}
+
+			function addPasswords(jsonArr){
+				$('#main').html('');
+				jsonArr.forEach((json) => {
+					addPassword(json);
+				})
+			}
+
+			function addPassword(json){
+				$("#main").append('<i>' + json.cat + '</i><br>');
+				$("#main").append('<i>' + json.description + '</i><br>');
+				var str = "<i>";
+				json.usernames.forEach((x) => {
+					str += x + "  ";
+				});
+				str += "</i><br>";
+				$("#main").append(str);
+				$("#main").append('<i>' + json.pw + '</i><br>');
+			}
+
       $(window).ready(() => {
 
         $('#newform').hide();
         $('#categories').hide();
+				$('#save').hide();
+				$('#newlink').hide();
 
         $('#submit').click(() => {
           var pw = $('#masterpw').val();
@@ -66,65 +126,48 @@
           }).done((msg) => {
             $('#loginsection').slideUp();
             token = msg;
-
-            $.ajax({
-              url: "http://localhost:8080/categories",
-              method: "POST",
-              data: {
-                token: token
-              }
-            }).done((msg) => {
-              var drop = $('#categories');
-              drop.empty();
-              drop.slideDown();
-              drop.append('<option selected="true" disabled>Choose Password</option>');
-              $.each(msg, (key, cat) => {
-                drop.append($('<option></option>').attr('value', cat).text(cat));
-              })
-              drop.change(selectselect);
-            })
-
-
+						$('#newlink').slideDown();
+						loadCategories();
           });
         })
 
-        var selectselect = () => {
-          var selected = $('#categories option:selected').text();
-          var data = {
-            token: token,
-            cat: $('#categories option:selected').text()
-          }
-          fetch("http://localhost:8080/get2", {
-            method: "POST",
-            body: selected + ";" + token//"token=" + token + "&cat=" + $('#categories option:selected').text()
-          })
-          .then(response => response.json())
-          .then(json => {
-            $('#pw').html(json.pw);
-            $('#description').html(json.description);
-            $('#name').html( $('#categories option:selected').text());
-            json.usernames.forEach((x) => {
-              $('#username').append("<p>" + x + "</p>");
-            })
-          })
+				var searchChange = () => {
 
-        }
+					var query = $('#search').val();
+					if(query.length >= 3){
+						fetch("http://localhost:8080/getSearch", {
+							method: "POST",
+							body: query + ";" + token//"token=" + token + "&cat=" + $('#categories option:selected').text()
+						})
+						.then(response => response.json())
+						.then(json => {
+							addPasswords(json);
+						})
+					}else{
+						$('#main').html('');
+					}
+
+				};
+
+				$('#search').change(searchChange);
+				$('#search').keypress(searchChange);
 
         $('#newlink').click(() => {
           $('#newform').slideDown();
+					$('#save').slideDown();
           $('#save').click(() => {
 
-            var name = $('#name').text();
-            var desc = $('#description').text();
-            var username = $('#username').text();
-            var pw = $('#newpw').text();
-            var pw2 = $('#repeatpw').text();
+            var name = $('#nameform').val();
+            var desc = $('#descriptionform').val();
+            var username = $('#usernameform').val();
+            var pw = $('#newpwform').val();
+            var pw2 = $('#repeatpwform').val();
 
             if(pw == pw2){
 
               $.ajax({
                 url: "http://localhost:8080/insert",
-                method: "GET",
+                method: "POST",
                 data: {
                   cat: name,
                   description: desc,
@@ -133,7 +176,12 @@
                   token: token
                 }
               }).done(msg => {
-                console.log(msg);
+								if(msg == true){
+									$('#newform input').val("");
+									$('#newform').slideUp();
+									$('#save').slideUp();
+									loadCategories();
+								}
               });
 
             }

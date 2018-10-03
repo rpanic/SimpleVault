@@ -6,6 +6,7 @@ import java.util.List;
 
 public class Password {
 
+	String cat;
 	String pw;
 	List<String> username;
 	String description;
@@ -15,6 +16,14 @@ public class Password {
 		this.pw = pw;
 		this.username = username;
 		this.description = description;
+	}
+
+	public String getCat() {
+		return cat;
+	}
+
+	public void setCat(String cat) {
+		this.cat = cat;
 	}
 
 	public String getPw() {

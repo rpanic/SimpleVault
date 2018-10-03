@@ -34,7 +34,7 @@ public class MainApplication {
 		return "Hello, World! This is the main Page";
 	}
 	
-	@RequestMapping(path={"/requestToken"}, method={RequestMethod.POST})
+	@RequestMapping(path={"/requestToken"}, method={RequestMethod.POST, RequestMethod.GET})
 	String requestToken(@RequestParam(required=true, name="pw") String pw){
 		
 		Random r = new Random();
@@ -71,6 +71,8 @@ public class MainApplication {
 			store.putEncoded(cat, p);
 			
 			save();
+			
+			System.out.println("Inserted " + cat);
 			return true;
 		}
 		
@@ -99,6 +101,34 @@ public class MainApplication {
 	Password get(@RequestBody String body) {
 		String[] arr = body.split(";");
 		return get(arr[0], arr[1]);
+	}
+	
+	@RequestMapping(path={"/getSearch"}, method={RequestMethod.POST})
+	Password[] getSearch(@RequestBody String body){
+
+		String[] arr = body.split(";");
+		if(tokens.containsKey(arr[1])) {
+		
+			Password[] list = null;
+
+			AES aes = new AES(tokens.get(arr[1]));
+			
+			System.out.println(arr.toString());
+			
+			list = store.encoded.keySet().stream().filter(x -> x.toLowerCase().contains(arr[0].toLowerCase()))
+			.map(x -> {
+				Password p = store.getDecoded(aes, x);
+				p.setCat(x);
+				return p;
+			}).toArray(Password[]::new);
+			
+			
+			
+			//System.out.println(list.toString());
+			return list;
+			
+		}
+		return null;
 	}
 	
 	@RequestMapping(path= {"/categories"}, method= {RequestMethod.POST, RequestMethod.GET})
@@ -143,6 +173,11 @@ public class MainApplication {
 				List<String> lines = Files.readAllLines(f.toPath());
 				
 				for(String line : lines) {
+					
+					if(line.equals("")){
+						continue;
+					}
+					System.out.println(line);
 					
 					int index = line.indexOf(delimiter.charAt(0));
 					String cat = line.substring(0, index);
