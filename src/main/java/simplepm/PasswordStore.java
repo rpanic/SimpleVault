@@ -30,6 +30,7 @@ public class PasswordStore {
 					return null;
 				}
 				Password n = new Password(dec, p.getUsernames(), p.getDescription());
+				n.setCat(p.getCat());
 				return n;
 			}else {
 				return null;

@@ -55,7 +55,9 @@ public class Password {
 	}
 
 	public String toSaveable(String delimiter) {
-		return pw + delimiter + description + delimiter + String.join(delimiter, username);
+		String s = pw + delimiter + description + delimiter + String.join(delimiter, username);
+		System.out.println("tosaveable: " + cat + ", "+ s);
+		return s;
 	}
 	
 	public static Password fromSave(String str, String delimiter) {

@@ -147,6 +147,41 @@ public class MainApplication {
 		load();
 	}
 	
+	@RequestMapping(path= {"/import"})
+	public boolean importFile(String token) {
+		
+		if(tokens.containsKey(token)) {
+			return importData(tokens.get(token));
+		}
+		
+		return false;
+		
+	}
+	
+	private boolean importData(String masterPw) {
+		try {
+			List<Password> list = FileImport.importFrom(new File(System.getProperty("user.dir") + "/pws.txt"));
+			
+			list.forEach(x -> x.toSaveable(";"));
+			
+			AES aes = new AES(masterPw);
+			
+			list.forEach(x -> {
+				x.setPw(aes.encrypt(x.getPw()));
+				store.putEncoded(x.getCat(), x);
+			});
+			
+			save();
+			
+			return true;
+			
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
 	File f = new File(System.getProperty("user.dir") + "/enc.csv");
 	
 	public void save() {
@@ -184,6 +219,7 @@ public class MainApplication {
 					line = line.substring(index + 1);
 					
 					Password p = Password.fromSave(line, delimiter);
+					p.setCat(cat);
 					store.putEncoded(cat, p);
 				}
 				

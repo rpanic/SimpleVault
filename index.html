@@ -1,4 +1,3 @@
-
 <!DOCTYPE HTML>
 <html>
 	<head>
@@ -22,11 +21,6 @@
 				<input type="search" autocomplete="off" id="search"></input>
         <select id="categories"></select>
 				<div  id="main">
-	        <br>
-	        <i id="name"></i><br>
-	        <i id="description"></i><br>
-	        <i id="username"></i><br>
-	        <i id="pw"></i><br>
 				</div>
       </section>
 
@@ -66,6 +60,7 @@
 				})
 				.then(response => response.json())
 				.then(json => {
+					$('#main').html('');
 					addPassword(json);
 				})
 			}
@@ -98,18 +93,21 @@
 
 			function addPassword(json){
 				$("#main").append('<i>' + json.cat + '</i><br>');
-				$("#main").append('<i>' + json.description + '</i><br>');
+				if(json.description !== undefined && json.description !== ""){
+					$("#main").append('<i>' + json.description + '</i><br>');
+				}
 				var str = "<i>";
 				json.usernames.forEach((x) => {
 					str += x + "  ";
 				});
 				str += "</i><br>";
 				$("#main").append(str);
-				$("#main").append('<i>' + json.pw + '</i><br>');
+				$("#main").append('<i>' + json.pw + '</i><br><br>');
 			}
 
       $(window).ready(() => {
 
+				$('#search').hide();
         $('#newform').hide();
         $('#categories').hide();
 				$('#save').hide();
@@ -127,6 +125,7 @@
             $('#loginsection').slideUp();
             token = msg;
 						$('#newlink').slideDown();
+						$('#search').slideDown();
 						loadCategories();
           });
         })
@@ -134,7 +133,7 @@
 				var searchChange = () => {
 
 					var query = $('#search').val();
-					if(query.length >= 3){
+					if(query.length >= 2){
 						fetch("http://localhost:8080/getSearch", {
 							method: "POST",
 							body: query + ";" + token//"token=" + token + "&cat=" + $('#categories option:selected').text()
